@@ -47,6 +47,8 @@ public class ClassFinderTest {
         assertTrue(Arrays.equals(expected, findMatching(classNames, "FB")));
     }
     
+    //FIXME: test executing findMatching more than one time
+    
     private String[] findMatching(String[] classNames, String pattern) {
         InputStream in = createStream(classNames);
         try {
