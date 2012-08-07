@@ -15,10 +15,8 @@ public class ClassFinder {
 	private InputStream in;
     
     private int patternIdx;
-	private int wildcardIdx = -1;
+	private int wildcardIdx;
 	
-	boolean[] matchMask;
-
     /**
      * @param in Stream containing class names on separate lines in <code>UTF-8</code> encoding. 
      */
@@ -34,14 +32,8 @@ public class ClassFinder {
         	String nPattern = normalizePattern(pattern);
             String className;
             while ((className = reader.readLine()) != null) {
-            	
                 if (matches(getSimpleName(className), nPattern)) {
                     result.add(className);
-                    
-/*                  System.out.println(getSimpleName(className)+" ("+pattern+")");
-                    printMask(matchMask);
-                    System.out.println("===");
-*/
                 }
             }
         } catch (IOException e) {
@@ -64,11 +56,10 @@ public class ClassFinder {
 	}
 
     private boolean matches(String className, String pattern) {
-    	patternIdx = 0;
-    	matchMask = new boolean[className.length()+1];
-    	className = className.toLowerCase()+' ';
+    	reset();
+    	className = normalize(className);
     	
-        char p = getNextChar(pattern);
+        char p = getNext(pattern);
         
         for (int i = 0; i < className.length(); i++) {
         	
@@ -80,16 +71,15 @@ public class ClassFinder {
         	boolean match = (c == p) || (p == ' ' && c == '_');
         	
        		if (!match) {
-       			if (wildcardIdx != -1) {
+       			if (isWildcardMode()) {
        				patternIdx = wildcardIdx;
-        			p = getNextChar(pattern);
+        			p = getNext(pattern);
         		} else {
         			return false;
         		}
        		} else {
-       			matchMask[i] = true;
 				if (++patternIdx < pattern.length()) {
-					p = getNextChar(pattern);
+					p = getNext(pattern);
 					continue;
 				} else {
 					return true;
@@ -99,7 +89,20 @@ public class ClassFinder {
         return false;
 	}
 
-    private char getNextChar(String pattern) {
+    private String normalize(String className) {
+    	return className.toLowerCase()+' ';
+	}
+
+	private void reset() {
+    	patternIdx = 0;
+    	wildcardIdx = -1;
+	}
+
+	private boolean isWildcardMode() {
+    	return wildcardIdx != -1;
+	}
+
+	private char getNext(String pattern) {
     	char p;
     	while ((p = pattern.charAt(patternIdx)) == '*') {
     		wildcardIdx = ++patternIdx;
@@ -125,13 +128,6 @@ public class ClassFinder {
 		}
     	
 		return result.toString();
-	}
-
-	private void printMask(boolean[] matchMask) {
-    	for (boolean b : matchMask) {
-    		System.out.print(b ? 'X' : ' ');
-		}
-    	System.out.println();
 	}
 
 }
